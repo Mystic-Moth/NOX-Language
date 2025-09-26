@@ -1,0 +1,39 @@
+// double slash for comments
+// ways to declare variables
+var name = "Egg"
+v message = " is cooked"
+
+// echo is printing to terminal
+echo name + message
+// outputs "Egg is cooked"
+
+// semi colons are optional for multiple operations on a single line
+// the last operation doesn't need a semi colon
+// variables can change types
+name = 20; echo name
+
+// if the compiler detects the array size being changed it will be a dynamic array in the bytecode
+// otherwise its a static array
+v names[2] = {"Zim", "Vim"}
+
+// if statements and functions are enclosed in square brackets
+if 1 + 1 != 2
+{
+    name = "pineapple"
+}
+
+foreach name in names {
+    echo name
+}
+
+func count(string)
+{
+    match string
+        case "10"; echo "ten"
+        case "9"; echo "nine"
+        case "8" {
+            echo "eight"
+        }
+}
+
+// other data types will be added but i don't wanna get ahead of myself before i even build the intepreter

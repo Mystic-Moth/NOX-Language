@@ -1,0 +1,1 @@
+g++ main.cpp chunk.cpp Lexer/lexer.cpp Lexer/tokenMap.cpp -o Compiler
