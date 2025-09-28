@@ -31,12 +31,12 @@ void runFile(char* characters)
 
     chunk chunk;
     bool successful = compile(sourceCode, &chunk);
-
-    // initVM();
+    cout << "compile successful\n";
+    interpretResult result = interpret(&chunk);
 }
 void REPL()
 {
-
+    cout << ">  ";
 }
 void test()
 {
