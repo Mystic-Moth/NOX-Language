@@ -7,15 +7,44 @@ void initVM()
 {
     
 }
+void printStatement(value val)
+{
+    switch (val.type) {
+        case VAL_BOOL:
+          printf(AS_BOOL(val) ? "true" : "false");
+          break;
+        case VAL_NIL: printf("nil"); break;
+        case VAL_NUMBER: printf("%g", AS_NUMBER(val)); break;
+    }
+}
+static bool isFalsey(value val) {
+    return IS_NIL(val) || (IS_BOOL(val) && !AS_BOOL(val));
+}
+static bool valuesEqual(value a, value b) {
+    if (a.type != b.type) return false;
+    switch (a.type) {
+        case VAL_BOOL:   return AS_BOOL(a) == AS_BOOL(b);
+        case VAL_NIL:    return true;
+        case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
+        default: return false; // Unreachable.
+    }
+}
 static interpretResult run()
 {
     #define READ_BYTE() (*vm.pc++)
     #define READ_CONSTANT() (vm.chunk->constants[READ_BYTE()])
-    #define BINARY_OP(op) \
+    #define BINARY_OP(valueType, op) \
     do { \
-      double b = pop(); \
-      double a = pop(); \
-      push(a op b); \
+            if (!IS_NUMBER(vm.stack.top())) { \
+                return INTERPRET_RUNTIME_ERROR; \
+            } \
+        double b = AS_NUMBER(pop()); \
+            if (!IS_NUMBER(vm.stack.top())) { \
+                push(NUMBER_VAL(b)); \
+                return INTERPRET_RUNTIME_ERROR; \
+            } \
+        double a = AS_NUMBER(pop()); \
+        push(valueType(a op b)); \
     } while (false)
     
     while (true)
@@ -24,13 +53,36 @@ static interpretResult run()
 
         switch (instruction = READ_BYTE())
         {
-            case OP_ADD:      BINARY_OP(+); break;
-            case OP_SUBTRACT: BINARY_OP(-); break;
-            case OP_MULTIPLY: BINARY_OP(*); break;
-            case OP_DIVIDE:   BINARY_OP(/); break;
+            case OP_ADD:      BINARY_OP(NUMBER_VAL, +); break;
+            case OP_SUBTRACT: BINARY_OP(NUMBER_VAL, -); break;
+            case OP_MULTIPLY: BINARY_OP(NUMBER_VAL, *); break;
+            case OP_DIVIDE:   BINARY_OP(NUMBER_VAL, /); break;
+
+            case OP_NIL: push(NIL_VAL); break;
+            case OP_TRUE: push(BOOL_VAL(true)); break;
+            case OP_FALSE: push(BOOL_VAL(false)); break;
+
+            case OP_NOT: push(BOOL_VAL(isFalsey(pop()))); break;
+            
+            case OP_GREATER:        BINARY_OP(BOOL_VAL, >); break;
+            case OP_LESS:           BINARY_OP(BOOL_VAL, <); break;
+            case OP_GREATER_EQUAL:  BINARY_OP(BOOL_VAL, >=); break;
+            case OP_LESS_EQUAL:     BINARY_OP(BOOL_VAL, <=); break;
+            case OP_NOT_EQUAL: {
+                value b = pop();
+                value a = pop();
+                push(BOOL_VAL(!valuesEqual(a, b)));
+                break;
+            }
+            case OP_EQUAL: {
+                value b = pop();
+                value a = pop();
+                push(BOOL_VAL(valuesEqual(a, b)));
+                break;
+            }
             case OP_ECHO:
             {
-                cout << pop() << '\n';
+                printStatement(pop());
                 break;
             }
             case OP_CONSTANT:
@@ -41,7 +93,11 @@ static interpretResult run()
             }
             case OP_NEGATE:
             {
-                push(-pop());
+                if (!IS_NUMBER(vm.stack.top())) {
+                    // runtimeError("Operand must be a number.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                push(NUMBER_VAL(-AS_NUMBER( pop() )) );
                 break;
             }
             case OP_RETURN:

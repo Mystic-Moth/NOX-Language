@@ -40,21 +40,21 @@ void REPL()
 }
 void test()
 {
-    chunk chunk;
+    // chunk chunk;
 
-    int constant = addConstant(&chunk, 20);
-    writeChunk(&chunk, OP_CONSTANT, 0);
-    writeChunk(&chunk, constant, 0);
+    // int constant = addConstant(&chunk, 20);
+    // writeChunk(&chunk, OP_CONSTANT, 0);
+    // writeChunk(&chunk, constant, 0);
 
-    constant = addConstant(&chunk, 2);
-    writeChunk(&chunk, OP_CONSTANT, 0);
-    writeChunk(&chunk, constant, 0);
+    // constant = addConstant(&chunk, 2);
+    // writeChunk(&chunk, OP_CONSTANT, 0);
+    // writeChunk(&chunk, constant, 0);
 
-    writeChunk(&chunk, OP_DIVIDE, 0);
-    writeChunk(&chunk, OP_ECHO, 0);
-    writeChunk(&chunk, OP_RETURN, 0);
+    // writeChunk(&chunk, OP_DIVIDE, 0);
+    // writeChunk(&chunk, OP_ECHO, 0);
+    // writeChunk(&chunk, OP_RETURN, 0);
 
-    interpretResult result = interpret(&chunk);
+    // interpretResult result = interpret(&chunk);
 }
 int main(int argc, char *argv[]) {
     if (argc == 1)

@@ -31,13 +31,27 @@ typedef enum {
 
 unordered_map<TokenType, Precedence> infixPrecedence = {
 {TOKEN_NUMBER, PREC_PRIMARY},
+{TOKEN_FALSE, PREC_PRIMARY},
+{TOKEN_TRUE, PREC_PRIMARY},
+{TOKEN_NIL, PREC_PRIMARY},
+
 {TOKEN_PLUS, PREC_TERM},
 {TOKEN_MINUS, PREC_TERM},
+
 {TOKEN_STAR, PREC_FACTOR},
 {TOKEN_SLASH, PREC_FACTOR},
+
 {TOKEN_LEFT_PAREN, PREC_CALL},
 {TOKEN_RIGHT_PAREN, PREC_CALL},
-{TOKEN_NOT, PREC_UNARY}
+
+{TOKEN_EQUAL_EQUAL, PREC_EQUALITY},
+{TOKEN_NOT_EQUAL, PREC_EQUALITY},
+{TOKEN_GREATER, PREC_COMPARISON},
+{TOKEN_LESS, PREC_COMPARISON},
+{TOKEN_GREATER_EQUAL, PREC_COMPARISON},
+{TOKEN_LESS_EQUAL, PREC_COMPARISON},
+
+{TOKEN_NOT, PREC_UNARY},
 };
 
 Parser parser;
@@ -96,8 +110,8 @@ static void emitConstant(value value)
 static void number()
 {
     cout << "number string: " << parser.current->text <<'\n';
-    double value = stod(parser.current->text);
-    emitConstant(value);
+    double valuee = stod(parser.current->text);
+    emitConstant( NUMBER_VAL(valuee) );
 }
 // pratt parser to hard
 // lets do shunting yard algorithm 
@@ -113,6 +127,16 @@ static void compileOperation(TokenType operation)
         case TOKEN_MINUS: emitByte(OP_SUBTRACT); cout << "subtract\n"; break;
         case TOKEN_SLASH: emitByte(OP_DIVIDE); cout << "divide\n"; break;
         case TOKEN_STAR: emitByte(OP_MULTIPLY); cout << "multiply\n"; break;
+
+        case TOKEN_EQUAL_EQUAL: emitByte(OP_EQUAL); cout << "equal\n"; break;
+        case TOKEN_GREATER: emitByte(OP_GREATER); cout << "greater\n"; break;
+        case TOKEN_LESS: emitByte(OP_LESS); cout << "less\n"; break;
+        case TOKEN_GREATER_EQUAL: emitByte(OP_GREATER_EQUAL); cout << "greater equal\n"; break;
+        case TOKEN_LESS_EQUAL: emitByte(OP_LESS_EQUAL); cout << "less equal\n"; break;
+        case TOKEN_NOT_EQUAL: emitByte(OP_NOT_EQUAL); emitByte(OP_NOT); cout << "not equal\n"; break;
+
+        case TOKEN_NOT: emitByte(OP_NOT); cout << "not\n"; break;
+        default: return; // unreachable
     }
 }
 static void expression()
@@ -132,6 +156,10 @@ static void expression()
         cout << "stack size: " << operatorStack.size() << '\n';
         switch(type)
         {
+            case TOKEN_FALSE: emitByte(OP_FALSE); break;
+            case TOKEN_NIL: emitByte(OP_NIL); break;
+            case TOKEN_TRUE: emitByte(OP_TRUE); break;
+
             case TOKEN_NUMBER:
             {
                 cout <<"number\n";
@@ -152,13 +180,6 @@ static void expression()
                 }
                 operatorStack.pop(); // pop ')'
                 cout << "paren complete\n";
-                break;
-            }
-            case TOKEN_NOT:
-            {
-                advance();
-                number();
-                emitByte(OP_NEGATE);
                 break;
             }
             default: // an operator like '+'
@@ -187,18 +208,12 @@ bool compile(string source, chunk* chunk)
     parser.current = &tokens[0];
     parser.hadError = false;    
 
-    // while (parser.current != &tokens[0] + tokens.size())
-    // {
-
-    // }
     for (token t : tokens) {
-        cout << t.line << " | " << "type: " << t.type << "|" << t.text << "|" << "\n";
+        cout << t.line << " | " << "type: " << t.type << "| " << t.text << "\n";
     }
     expression();
     emitByte(OP_ECHO);
     emitByte(OP_RETURN);
 
-    
-    // consume(TOKEN_EOF, "Expect end of expression.");
     return !parser.hadError;
 }

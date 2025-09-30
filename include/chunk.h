@@ -16,6 +16,20 @@
         OP_SUBTRACT,
         OP_DIVIDE,
         OP_MULTIPLY,
+
+        OP_NIL,
+        OP_TRUE,
+        OP_FALSE,
+        OP_NOT,
+
+        OP_EQUAL,
+        OP_NOT_EQUAL,
+        OP_GREATER,
+        OP_LESS,
+        OP_EQUAL_EQUAL,
+        OP_GREATER_EQUAL,
+        OP_LESS_EQUAL,
+
         OP_ECHO,
         OP_RETURN
     };

@@ -116,7 +116,6 @@ void tokeniseIdentifier()
     {
         node = traverse(node, peek());
         scanner.current++;
-        cout << "tokenLast " << peek() << '\n';
     }
     if (node->token != TOKEN_ERROR)
     {
