@@ -1,7 +1,6 @@
 #ifndef VM_H
 #define VM_H
     #include <stack>
-
     #include "chunk.h"
 
     typedef struct {

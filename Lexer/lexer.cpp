@@ -90,6 +90,16 @@ void generateToken(TokenType type)
     token.line = scanner.line;
     tokens.push_back(token);
 }
+void generateStringToken()
+{
+    // different from other tokens cuz we don't want the quotes "
+    token token;
+    token.length = scanner.current - scanner.start - 1; // + 1;
+    token.text = code.substr(scanner.start+1, token.length);
+    token.type = TOKEN_STRING;
+    token.line = scanner.line;
+    tokens.push_back(token);
+}
 char peek()
 {
     if (scanner.current == code.length()-1) return '\0';
@@ -130,6 +140,21 @@ void tokeniseIdentifier()
         }
         generateToken(TOKEN_IDENTIFIER);
     }
+}
+void tokeniseString()
+{
+    scanner.current++; // skip opening "
+    while (peek() != '"' && peek() != '\0')
+    {
+        if (peek() == '\n') scanner.line++;
+        scanner.current++;
+    }
+    if (peek() == '\0')
+    {
+        generateErrorToken();
+        return;
+    }
+    generateStringToken();
 }
 void tokeniseOperator()
 {
@@ -192,6 +217,13 @@ void generateTokens(string text)
             tokeniseIdentifier();
             continue;
         }
+        // is a string
+        if (peek() == '"')
+        {
+            tokeniseString();
+            continue;
+        }
+
         // that leaves just operators
         tokeniseOperator();
     }

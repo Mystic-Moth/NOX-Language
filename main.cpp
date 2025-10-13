@@ -15,8 +15,8 @@ string readFile(string filePath)
 {
     ifstream file(filePath);
 
-    string sourceCode;
-    string tmp;
+    string sourceCode = "";
+    string tmp = "";
 
     while(getline(file, tmp)) {
         sourceCode += tmp + '\n';
@@ -30,6 +30,9 @@ void runFile(char* characters)
     string sourceCode = readFile(filePath);
 
     chunk chunk;
+    chunk.code.clear();
+    chunk.lines.clear();
+    chunk.constants.clear();
     bool successful = compile(sourceCode, &chunk);
     cout << "compile successful\n";
     interpretResult result = interpret(&chunk);

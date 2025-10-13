@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <stack>
 
+#include "object.h"
 #include "compiler.h"
 
 using namespace std;
@@ -17,6 +18,7 @@ typedef struct
 
 typedef enum {
     PREC_NONE,
+    PREC_STRING,      // strings or indentifiers
     PREC_CALL,        // . ()
     PREC_ASSIGNMENT,  // =
     PREC_OR,          // or
@@ -30,6 +32,9 @@ typedef enum {
 } Precedence;
 
 unordered_map<TokenType, Precedence> infixPrecedence = {
+{TOKEN_STRING, PREC_STRING},
+{TOKEN_IDENTIFIER, PREC_STRING},
+
 {TOKEN_NUMBER, PREC_PRIMARY},
 {TOKEN_FALSE, PREC_PRIMARY},
 {TOKEN_TRUE, PREC_PRIMARY},
@@ -54,7 +59,7 @@ unordered_map<TokenType, Precedence> infixPrecedence = {
 {TOKEN_NOT, PREC_UNARY},
 };
 
-Parser parser;
+Parser parser = {nullptr, nullptr, false};;
 chunk* compilingChunk;
 
 static chunk* currentChunk() {
@@ -92,7 +97,7 @@ static void consume(TokenType type, string message)
 }
 static void emitByte(uint8_t byte)
 {
-    writeChunk(currentChunk(), byte, parser.current->line);
+    writeChunk(currentChunk(), byte, parser.current->line); 
 }
 static void emitBytes(uint8_t byte1, uint8_t byte2)
 {
@@ -133,11 +138,15 @@ static void compileOperation(TokenType operation)
         case TOKEN_LESS: emitByte(OP_LESS); cout << "less\n"; break;
         case TOKEN_GREATER_EQUAL: emitByte(OP_GREATER_EQUAL); cout << "greater equal\n"; break;
         case TOKEN_LESS_EQUAL: emitByte(OP_LESS_EQUAL); cout << "less equal\n"; break;
-        case TOKEN_NOT_EQUAL: emitByte(OP_NOT_EQUAL); emitByte(OP_NOT); cout << "not equal\n"; break;
+        case TOKEN_NOT_EQUAL: emitByte(OP_NOT_EQUAL); cout << "not equal\n"; break;
 
         case TOKEN_NOT: emitByte(OP_NOT); cout << "not\n"; break;
         default: return; // unreachable
     }
+}
+static uint8_t identifierConstant(token* name)
+{
+    return addConstant(currentChunk(), OBJ_VAL( copyString(name->text) ));
 }
 static void expression()
 {
@@ -182,6 +191,17 @@ static void expression()
                 cout << "paren complete\n";
                 break;
             }
+            case TOKEN_STRING:
+            {
+                emitConstant(OBJ_VAL( copyString(parser.current->text) ));
+                break;
+            }
+            case TOKEN_IDENTIFIER:
+            {
+                uint8_t arg = identifierConstant(parser.current);
+                emitBytes(OP_GET_GLOBAL, arg);
+                break;
+            }
             default: // an operator like '+'
             {
                 while(!operatorStack.empty() && infixPrecedence[operatorStack.top()] > infixPrecedence[type])
@@ -201,8 +221,74 @@ static void expression()
     cout << "expression compelte\n";
     #undef compileTop
 }
+static void expressionStatement()
+{
+    expression();
+    emitByte(OP_POP);
+}
+static void printStatement()
+{
+    expression();
+    emitByte(OP_ECHO);
+}
+static bool check(TokenType type)
+{
+    return parser.current->type == type;
+}
+static bool match(TokenType type)
+{
+    if (!check(type)) return false;
+    advance();
+    return true;
+}
+static void statement()
+{
+    if (match(TOKEN_ECHO))
+    {
+        printStatement();
+    }
+    else
+    {
+        expressionStatement();
+    }
+}
+static uint8_t parseVariable(string errorMessage)
+{
+    consume(TOKEN_IDENTIFIER, errorMessage);
+    return identifierConstant(parser.previous);
+}
+static void defineVariable(uint8_t global)
+{
+    emitBytes(OP_DEFINE_GLOBAL, global);
+}
+static void varDeclaration()
+{
+    uint8_t global = parseVariable("expect variable name");
+
+    if(match(TOKEN_EQUAL))
+    {
+        expression();
+    }
+    else
+    {
+        emitByte(OP_NIL);
+    }
+    defineVariable(global);
+}
+static void declaration()
+{
+    if(match(TOKEN_VAR))
+    {
+        varDeclaration();
+    }
+    else
+    {
+        statement();
+    }
+}
 bool compile(string source, chunk* chunk)
 {
+    tokens.clear();
     generateTokens(source);
     compilingChunk = chunk;
     parser.current = &tokens[0];
@@ -211,9 +297,11 @@ bool compile(string source, chunk* chunk)
     for (token t : tokens) {
         cout << t.line << " | " << "type: " << t.type << "| " << t.text << "\n";
     }
-    expression();
-    emitByte(OP_ECHO);
-    emitByte(OP_RETURN);
 
+    while (!match(TOKEN_EOF)) {
+        declaration();
+    }
+    parser.current--;
+    emitByte(OP_RETURN);
     return !parser.hadError;
 }

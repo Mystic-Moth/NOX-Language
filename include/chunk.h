@@ -30,6 +30,10 @@
         OP_GREATER_EQUAL,
         OP_LESS_EQUAL,
 
+        OP_POP,
+        OP_DEFINE_GLOBAL,
+        OP_GET_GLOBAL,
+
         OP_ECHO,
         OP_RETURN
     };
