@@ -1,7 +1,9 @@
-#include "vm.h"
-#include "object.h"
 #include <iostream>
 #include <unordered_map>
+
+#include "vm.h"
+#include "object.h"
+#include "debug.h"
 
 using namespace std;
 
@@ -127,7 +129,55 @@ static interpretResult run()
                 push(globals[name->str]);
                 break;
             }
-            
+            case OP_SET_GLOBAL:
+            {
+                ObjString* name = READ_STRING();
+                if (globals.find(name->str) == globals.end()) // did not find global variable
+                {   
+                    cout << "Undefined variable '" << name->str << "'\n";
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                globals[name->str] = vm.stack.top();
+                break;
+            }
+            case OP_DEFINE_LOCAL:
+            {
+                vm.locals.push_back(pop());
+                break;
+            }
+            case OP_POP_LOCAL:
+            {
+                if (vm.locals.size() == 0)
+                {
+                    cout << "No local variables to pop\n";
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                vm.locals.pop_back();
+                break;
+            }
+            case OP_SET_LOCAL:
+            {
+                uint8_t slot = READ_BYTE();
+                if (slot >= vm.locals.size())
+                {
+                    cout << "No local variable at slot " << (int)slot << "\n";
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                vm.locals[slot] = vm.stack.top(); // op pop takes care of popping it
+                break;
+            }
+            case OP_GET_LOCAL:
+            {
+                uint8_t slot = READ_BYTE();
+                if (slot >= vm.locals.size())
+                {
+                    cout << "No local variable at slot " << (int)slot << ".\n";
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                push(vm.locals[slot]);
+                break;
+            }
+
             case OP_GREATER:        BINARY_OP(BOOL_VAL, >); break;
             case OP_LESS:           BINARY_OP(BOOL_VAL, <); break;
             case OP_GREATER_EQUAL:  BINARY_OP(BOOL_VAL, >=); break;
@@ -192,7 +242,7 @@ interpretResult interpret(chunk* chunk)
     vm.pc = &vm.chunk->code[0];
     for (auto a : chunk->code)
     {
-        cout << "code: " << (int)a << '\n';
+        cout << "code: " << disassemble(a) << " " << (int)a << '\n';
     }
     return run();
 }

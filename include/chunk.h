@@ -1,4 +1,3 @@
-
 #ifndef CHUNK_H
 #define CHUNK_H
     #include <cstdint>
@@ -31,8 +30,13 @@
         OP_LESS_EQUAL,
 
         OP_POP,
+        OP_POP_LOCAL,
         OP_DEFINE_GLOBAL,
         OP_GET_GLOBAL,
+        OP_SET_GLOBAL,
+        OP_DEFINE_LOCAL,
+        OP_SET_LOCAL,
+        OP_GET_LOCAL,
 
         OP_ECHO,
         OP_RETURN

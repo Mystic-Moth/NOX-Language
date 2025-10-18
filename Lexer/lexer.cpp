@@ -81,6 +81,15 @@ void generateErrorToken()
 {
 
 }
+void generateSemiColonToken()
+{
+    token token;
+    token.length = 1;
+    token.text = ";";
+    token.type = TOKEN_SEMICOLON;
+    token.line = scanner.line;
+    tokens.push_back(token);
+}
 void generateToken(TokenType type)
 {
     token token;
@@ -127,9 +136,9 @@ void tokeniseIdentifier()
         node = traverse(node, peek());
         scanner.current++;
     }
+    scanner.current--; // go back to known character as the current one could be a space or something
     if (node->token != TOKEN_ERROR)
     {
-        scanner.current--;
         generateToken(node->token);
     }
     else
@@ -174,13 +183,26 @@ void skipWhitespace()
         switch(peek())
         {
             case ' ': scanner.current++; break;
-            case '\n': scanner.current++; scanner.line++; break;
+            case '\n':
+                {
+                    scanner.current++;
+                    if (tokens[tokens.size()-1].type != TOKEN_SEMICOLON)
+                    {
+                        generateSemiColonToken();
+                    }
+                    scanner.line++;
+                    break;
+                }
             case '/':
                 if (peekNext() == '/')
                 {
                     while (peek() != '\n')
                     {
                         scanner.current++;
+                    }
+                    if (tokens.size() == 0 || tokens[tokens.size()-1].type != TOKEN_SEMICOLON)
+                    {
+                        generateSemiColonToken();
                     }
                     scanner.line++;
                     scanner.current++;

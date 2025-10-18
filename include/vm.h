@@ -1,12 +1,14 @@
 #ifndef VM_H
 #define VM_H
     #include <stack>
+    #include <vector>
     #include "chunk.h"
 
     typedef struct {
         chunk* chunk;
         uint8_t* pc;
         std::stack<value> stack;
+        std::vector<value> locals;
     } VM;
     typedef enum {
         INTERPRET_OK,

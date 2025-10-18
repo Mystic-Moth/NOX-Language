@@ -31,7 +31,6 @@
     {
         return IS_OBJ(valuee) && AS_OBJ(valuee)->type == type;
     }
-    // make this work
     static ObjString* copyString(string str)
     {
         ObjString* striing = new ObjString();

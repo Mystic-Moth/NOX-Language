@@ -1,1 +1,1 @@
-g++ main.cpp vm.cpp chunk.cpp compiler.cpp Lexer/lexer.cpp Lexer/tokenMap.cpp -Iinclude -o Compiler
+g++ main.cpp vm.cpp chunk.cpp compiler.cpp Lexer/lexer.cpp Lexer/tokenMap.cpp debug.cpp -Iinclude -o Compiler
